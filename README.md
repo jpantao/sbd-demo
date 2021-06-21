@@ -1,5 +1,15 @@
 # PostgreSQL Isolation (not for all data types)
 
+## Running PostgreSQL
+We have use PostgreSQL's docker image available
+[here](https://hub.docker.com/_/postgres/). The following command launches
+PostgreSQL and  makes it available at [localhost:5432](localhost:5432) with
+username `postgres`, and password `mysecretpassword`.
+```bash
+$ ./scripts/launch_postgres
+```
+
+
 
 ## Sequences
 
@@ -12,9 +22,15 @@ observed with a simple `SELECT` query. For example:
 CREATE SEQUENCE student_number_generator;
 SELECT * from student_number_generator;
 ```
-![simple_sequence]()
+![simple_sequence](images/student_number_generator.png)
 
-**TODO:** List sequence operations.
+
+From [PostgreSQL documentation](https://www.postgresql.org/docs/current/functions-sequence.html)
+we can see that sequences have the following operations:
+- `nextval ( regclass ) → bigint` - Advances the sequence object to its next value and returns that value. This is done atomically: even if multiple sessions execute `nextval` concurrently, each will safely receive a distinct sequence value.
+- `setval ( regclass, bigint [, boolean ] ) → bigint` - Sets the sequence object's current value, and optionally its `is_called` flag. The two-parameter form sets the sequence's `last_value` field to the specified value and sets its `is_called` field to true, meaning that the next `nextval` will advance the sequence before returning a value. 
+- `currval ( regclass ) → bigint` - Returns the value most recently obtained by `nextval` for this sequence in the current session.
+- `lastval () → bigint` - Returns the value most recently returned by `nextval` in the current session. 
 
 ## Serial
 
@@ -75,7 +91,6 @@ BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 INSERT INTO students (name) VALUES ('Bob');
 SELECT * from students
 
-
 COMMIT;
 ```
 
@@ -83,10 +98,9 @@ COMMIT;
 ```sql
 BEGIN TRANSACTION ISOLATION LEVEL SERIALIZABLE;
 
-SELECT * from students
-INSERT INTO students VALUES (DEFAULT, 'Alice');
-SELECT * from students
-
+SELECT * FROM students
+INSERT INTO students (name) VALUES ('Alice');
+SELECT * FROM students
 
 COMMIT;
 ```
@@ -99,19 +113,26 @@ Let's say that the schedule is as follows:
    `student_number_generator`;
 4. **T1** reads the table `students` observing that Bob was inserted with
    `number` equal to 1;
-5. **T2** reads the table `students` observing that it is still empty because of
-   isolation;
+   ![bob_1](images/bob_1.png)
+5. **T2** reads the table `students` observing that it is still empty because of isolation;
+   ![alice_1](images/alice_1.png)
 6. **T2** inserts Alice into the `students` table using the sequence
    `student_number_generator`;
 7. **T2** reads the table `students` observing that Alice was inserted with
    `number` equal to 2;
+   ![alice_2](images/alice_2.png)
 8. **T1** successfully commits 
-9. **T2** tries to commit, but fails and rolls back.
+9.  **T2** tries to commit, but fails and rolls back.
+    ![alice_3](images/alice_3.png)
 
 In such a scenario, the table `students` will have Bob's tuple but not Alice's.
 Moreover, if we try to add Alice now, we will observe that she is inserted with
 `numer` equal to 3, since the sequence associated with the `SERIAL` datatype was
-not rolled back with **T2**. In the end, what we can take from this is that
+not rolled back with **T2**.
+
+![gap](images/default_2.png)
+
+In the end, what we can take from this is that
 isolation is violated, and also that rollbacks might not discard all transaction
 changes whenever sequences are used, which is not what we would expect at first.
 
