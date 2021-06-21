@@ -1,4 +1,4 @@
-# PostgreSQL Serializable (not for all data types)
+# PostgreSQL Isolation (not for all data types)
 
 
 ## Sequences
