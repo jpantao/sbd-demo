@@ -25,12 +25,22 @@ SELECT * from student_number_generator;
 ![simple_sequence](images/student_number_generator.png)
 
 
-From [PostgreSQL documentation](https://www.postgresql.org/docs/current/functions-sequence.html)
+From [PostgreSQL
+documentation](https://www.postgresql.org/docs/current/functions-sequence.html)
 we can see that sequences have the following operations:
-- `nextval ( regclass ) → bigint` - Advances the sequence object to its next value and returns that value. This is done atomically: even if multiple sessions execute `nextval` concurrently, each will safely receive a distinct sequence value.
-- `setval ( regclass, bigint [, boolean ] ) → bigint` - Sets the sequence object's current value, and optionally its `is_called` flag. The two-parameter form sets the sequence's `last_value` field to the specified value and sets its `is_called` field to true, meaning that the next `nextval` will advance the sequence before returning a value. 
-- `currval ( regclass ) → bigint` - Returns the value most recently obtained by `nextval` for this sequence in the current session.
-- `lastval () → bigint` - Returns the value most recently returned by `nextval` in the current session. 
+- `nextval ( regclass ) → bigint` - Advances the sequence object to its next
+  value and returns that value. This is done atomically: even if multiple
+  sessions execute `nextval` concurrently, each will safely receive a distinct
+  sequence value.
+- `setval ( regclass, bigint [, boolean ] ) → bigint` - Sets the sequence
+  object's current value, and optionally its `is_called` flag. The two-parameter
+  form sets the sequence's `last_value` field to the specified value and sets
+  its `is_called` field to true, meaning that the next `nextval` will advance
+  the sequence before returning a value. 
+- `currval ( regclass ) → bigint` - Returns the value most recently obtained by
+  `nextval` for this sequence in the current session.
+- `lastval () → bigint` - Returns the value most recently returned by `nextval`
+  in the current session. 
 
 ## Serial
 
@@ -112,15 +122,13 @@ Let's say that the schedule is as follows:
 3. **T1** inserts Bob into the `students` table using the sequence
    `student_number_generator`;
 4. **T1** reads the table `students` observing that Bob was inserted with
-   `number` equal to 1;
-   ![bob_1](images/bob_1.png)
-5. **T2** reads the table `students` observing that it is still empty because of isolation;
-   ![alice_1](images/alice_1.png)
+   `number` equal to 1; ![bob_1](images/bob_1.png)
+5. **T2** reads the table `students` observing that it is still empty because of
+   isolation; ![alice_1](images/alice_1.png)
 6. **T2** inserts Alice into the `students` table using the sequence
    `student_number_generator`;
 7. **T2** reads the table `students` observing that Alice was inserted with
-   `number` equal to 2;
-   ![alice_2](images/alice_2.png)
+   `number` equal to 2; ![alice_2](images/alice_2.png)
 8. **T1** successfully commits 
 9.  **T2** tries to commit, but fails and rolls back.
     ![alice_3](images/alice_3.png)
@@ -132,7 +140,10 @@ not rolled back with **T2**.
 
 ![gap](images/default_2.png)
 
-In the end, what we can take from this is that
-isolation is violated, and also that rollbacks might not discard all transaction
-changes whenever sequences are used, which is not what we would expect at first.
+In the end, what we can take from this is that isolation is violated, and also
+that rollbacks might not discard all transaction changes whenever sequences are
+used, which is not what we would expect at first.
 
+## Useful Links
+- [PostgreSQL's Sequence Manipulation Functions](https://www.postgresql.org/docs/current/functions-sequence.html);
+- [PostgreSQL - SERIAL - Generate IDs (Identity, Auto-increment)](https://sqlines.com/postgresql/datatypes/serial).
