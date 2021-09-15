@@ -1,7 +1,7 @@
 # PostgreSQL Isolation (not for all data types)
 
 ## Running PostgreSQL
-We have use PostgreSQL's docker image available
+We have used PostgreSQL's docker image available
 [here](https://hub.docker.com/_/postgres/). The following command launches
 PostgreSQL and  makes it available at [localhost:5432](localhost:5432) with
 username `postgres`, and password `mysecretpassword`.
